@@ -54,53 +54,55 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors() // 👉 bật cors ở đây
-                .and()
-                .authorizeHttpRequests(auth -> auth
-                        // Cho phép POST vào các endpoint public
-                        .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
-                        // Cho phép GET không cần login
-                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
+public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+    httpSecurity
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ Sửa lại cách config
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(auth -> auth
+                    // ✅ OPTIONS phải được permit TRƯỚC
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                    // Cho phép POST vào các endpoint public
+                    .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
+                    // Cho phép GET không cần login
+                    .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
+                    // Các request khác đều cần JWT
+                    .anyRequest().authenticated()
+            )
+            .oauth2ResourceServer(oauth2 -> oauth2
+                    .jwt(jwtConfigurer -> jwtConfigurer
+                            .decoder(jwtDecoder)
+                            .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                    )
+                    .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+            );
 
-                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
-                        // Các request khác đều cần JWT
-                        .anyRequest().authenticated()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwtConfigurer ->
-                                jwtConfigurer.decoder(jwtDecoder).jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
+    return httpSecurity.build();
+}
 
-        return httpSecurity.build();
-    }
+@Bean
+CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+    
+    // ✅ Chỉ set 1 lần
+    configuration.setAllowedOrigins(List.of("https://pet-shop-react-pearl.vercel.app"));
+    
+    // ✅ Phải có OPTIONS
+    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+    
+    // ✅ Cho phép tất cả headers
+    configuration.setAllowedHeaders(List.of("*"));
+    
+    // ✅ Expose headers nếu frontend cần đọc
+    configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
+    
+    // ✅ Set credentials
+    configuration.setAllowCredentials(true);
+    
+    // ✅ Set maxAge để browser cache preflight response
+    configuration.setMaxAge(3600L);
 
-    @Bean
-    CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-    
-    // Chỉ set 1 lần, dùng domain cụ thể
-    configuration.setAllowedOrigins(List.of(
-    "https://pet-shop-react-pearl.vercel.app",
-    "http://localhost:3000",  // cho development
-    "http://localhost:5173"   // nếu dùng Vite
-));
-    
-    // Cho phép tất cả methods
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-    
-    // Cho phép tất cả headers
-        configuration.setAllowedHeaders(List.of("*"));
-    
-    // Cho phép credentials (cookies, authorization headers)
-        configuration.setAllowCredentials(true);
-    
-    // Expose headers nếu cần (ví dụ: Authorization)
-        configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
     return source;
 }
 
