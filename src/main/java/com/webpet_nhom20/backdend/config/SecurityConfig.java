@@ -77,10 +77,12 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("https://pet-shop-react-pearl.vercel.app")); 
         configuration.setAllowedOrigins(List.of("*")); // hoặc thay bằng domain cụ thể
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(false); // nếu cần cookie thì set true + origin cụ thể
+        
+        configuration.setAllowCredentials(true); // nếu cần cookie thì set true + origin cụ thể
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration); // áp dụng cho tất cả API
