@@ -79,17 +79,30 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://pet-shop-react-pearl.vercel.app")); 
-        configuration.setAllowedOrigins(List.of("*")); // hoặc thay bằng domain cụ thể
+    
+    // Chỉ set 1 lần, dùng domain cụ thể
+    configuration.setAllowedOrigins(List.of(
+    "https://pet-shop-react-pearl.vercel.app",
+    "http://localhost:3000",  // cho development
+    "http://localhost:5173"   // nếu dùng Vite
+));
+    
+    // Cho phép tất cả methods
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+    
+    // Cho phép tất cả headers
         configuration.setAllowedHeaders(List.of("*"));
-        
-        configuration.setAllowCredentials(true); // nếu cần cookie thì set true + origin cụ thể
+    
+    // Cho phép credentials (cookies, authorization headers)
+        configuration.setAllowCredentials(true);
+    
+    // Expose headers nếu cần (ví dụ: Authorization)
+        configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // áp dụng cho tất cả API
-        return source;
-    }
+        source.registerCorsConfiguration("/**", configuration);
+    return source;
+}
 
 
     // Custom converter để lấy authorities từ JWT
