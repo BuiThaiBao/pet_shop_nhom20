@@ -64,6 +64,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, PUBLIC_POST_ENDPOINTS).permitAll()
                         // Cho phép GET không cần login
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
+
+                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() 
                         // Các request khác đều cần JWT
                         .anyRequest().authenticated()
                 )
