@@ -18,6 +18,7 @@
     <name>Pet_Shop</name>
     <description>Pet_Shop</description>
     <url/>
+    <packaging>war</packaging>
     <licenses>
         <license/>
     </licenses>
